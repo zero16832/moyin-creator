@@ -8,6 +8,8 @@ export class IndexedDBAdapter<T> implements StorageAdapter<T> {
   private storeName: string;
   private version: number;
 
+  private dbPromise: Promise<IDBDatabase> | null = null;
+
   constructor(dbName: string, storeName: string, version = 1) {
     this.dbName = dbName;
     this.storeName = storeName;
@@ -15,10 +17,17 @@ export class IndexedDBAdapter<T> implements StorageAdapter<T> {
   }
 
   private async getDB(): Promise<IDBDatabase> {
-    return new Promise((resolve, reject) => {
+    if (this.dbPromise) {
+      return this.dbPromise;
+    }
+
+    this.dbPromise = new Promise((resolve, reject) => {
       const request = indexedDB.open(this.dbName, this.version);
 
-      request.onerror = () => reject(request.error);
+      request.onerror = () => {
+        this.dbPromise = null;
+        reject(request.error);
+      };
       request.onsuccess = () => resolve(request.result);
 
       request.onupgradeneeded = (event) => {
@@ -28,6 +37,8 @@ export class IndexedDBAdapter<T> implements StorageAdapter<T> {
         }
       };
     });
+
+    return this.dbPromise;
   }
 
   async get(key: string): Promise<T | null> {

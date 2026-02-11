@@ -128,19 +128,22 @@ export const getImageDimensions = (
   return new Promise((resolve, reject) => {
     const img = new window.Image();
 
+    const objectUrl = URL.createObjectURL(file);
+    img.src = objectUrl;
+
     img.addEventListener("load", () => {
       const width = img.naturalWidth;
       const height = img.naturalHeight;
+      URL.revokeObjectURL(objectUrl);
       resolve({ width, height });
       img.remove();
     });
 
     img.addEventListener("error", () => {
+      URL.revokeObjectURL(objectUrl);
       reject(new Error("Could not load image"));
       img.remove();
     });
-
-    img.src = URL.createObjectURL(file);
   });
 };
 
@@ -158,6 +161,9 @@ export const generateVideoThumbnail = (
       return;
     }
 
+    const objectUrl = URL.createObjectURL(file);
+    video.src = objectUrl;
+
     video.addEventListener("loadedmetadata", () => {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -172,6 +178,7 @@ export const generateVideoThumbnail = (
       const width = video.videoWidth;
       const height = video.videoHeight;
 
+      URL.revokeObjectURL(objectUrl);
       resolve({ thumbnailUrl, width, height });
 
       // Cleanup
@@ -180,12 +187,12 @@ export const generateVideoThumbnail = (
     });
 
     video.addEventListener("error", () => {
+      URL.revokeObjectURL(objectUrl);
       reject(new Error("Could not load video"));
       video.remove();
       canvas.remove();
     });
 
-    video.src = URL.createObjectURL(file);
     video.load();
   });
 };
@@ -197,17 +204,21 @@ export const getMediaDuration = (file: File): Promise<number> => {
       file.type.startsWith("video/") ? "video" : "audio"
     ) as HTMLVideoElement;
 
+    const objectUrl = URL.createObjectURL(file);
+    element.src = objectUrl;
+
     element.addEventListener("loadedmetadata", () => {
       resolve(element.duration);
+      URL.revokeObjectURL(objectUrl);
       element.remove();
     });
 
     element.addEventListener("error", () => {
+      URL.revokeObjectURL(objectUrl);
       reject(new Error("Could not load media"));
       element.remove();
     });
 
-    element.src = URL.createObjectURL(file);
     element.load();
   });
 };
@@ -325,34 +336,16 @@ export const useMediaStore = create<MediaStore>()(
     set({ isLoading: true });
 
     try {
+      const state = get();
+      // Cleanup existing object URLs before loading new ones to prevent leaks
+      state.mediaFiles.forEach((item) => {
+        if (item.url) URL.revokeObjectURL(item.url);
+        if (item.thumbnailUrl) URL.revokeObjectURL(item.thumbnailUrl);
+      });
+
       const mediaItems = await storageService.loadAllMediaFiles({ projectId });
 
-      // Regenerate thumbnails for video items
-      const updatedMediaItems = await Promise.all(
-        mediaItems.map(async (item) => {
-          if (item.type === "video" && item.file) {
-            try {
-              const { thumbnailUrl, width, height } =
-                await generateVideoThumbnail(item.file);
-              return {
-                ...item,
-                thumbnailUrl,
-                width: width || item.width,
-                height: height || item.height,
-              };
-            } catch (error) {
-              console.error(
-                `Failed to regenerate thumbnail for video ${item.id}:`,
-                error
-              );
-              return item;
-            }
-          }
-          return item;
-        })
-      );
-
-      const scopedMediaItems = updatedMediaItems.map((item) => ({
+      const scopedMediaItems = mediaItems.map((item) => ({
         ...item,
         projectId,
       }));

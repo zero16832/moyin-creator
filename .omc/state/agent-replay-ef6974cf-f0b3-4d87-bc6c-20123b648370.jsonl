@@ -144,3 +144,5 @@
 {"t":0,"agent":"afd13a3","agent_type":"fixer-arch","event":"agent_start","parent_mode":"none"}
 {"t":0,"agent":"a1779f8","agent_type":"fixer-sec","event":"agent_start","parent_mode":"none"}
 {"t":0,"agent":"a56832b","agent_type":"unknown","event":"agent_stop","success":true}
+{"t":0,"agent":"afd13a3","agent_type":"fixer-arch","event":"agent_stop","success":true,"duration_ms":190033}
+{"t":0,"agent":"a64eeff","agent_type":"fixer-arch","event":"agent_start","parent_mode":"none"}

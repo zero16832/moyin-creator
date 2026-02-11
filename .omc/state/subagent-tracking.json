@@ -235,7 +235,9 @@
       "agent_type": "fixer-arch",
       "started_at": "2026-02-11T04:45:34.466Z",
       "parent_mode": "none",
-      "status": "running"
+      "status": "completed",
+      "completed_at": "2026-02-11T04:48:44.499Z",
+      "duration_ms": 190033
     },
     {
       "agent_id": "a1779f8",
@@ -243,10 +245,17 @@
       "started_at": "2026-02-11T04:45:34.527Z",
       "parent_mode": "none",
       "status": "running"
+    },
+    {
+      "agent_id": "a64eeff",
+      "agent_type": "fixer-arch",
+      "started_at": "2026-02-11T04:48:44.679Z",
+      "parent_mode": "none",
+      "status": "running"
     }
   ],
-  "total_spawned": 22,
-  "total_completed": 17,
+  "total_spawned": 23,
+  "total_completed": 18,
   "total_failed": 0,
-  "last_updated": "2026-02-11T04:46:02.642Z"
+  "last_updated": "2026-02-11T04:48:44.782Z"
 }
